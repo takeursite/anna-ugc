@@ -1,3 +1,10 @@
+// ---------- Общее: размер «пикселя макета» (--u) и признак мобильной раскладки ----------
+var isMobile = window.matchMedia('(max-width: 900px)').matches;
+var unitProbe = document.createElement('div');
+unitProbe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;height:0;width:calc(100 * var(--u))';
+document.body.appendChild(unitProbe);
+function unitPx() { return unitProbe.getBoundingClientRect().width / 100; }
+
 // Демо-форма: ничего не отправляем.
 document.getElementById('inquiry').addEventListener('submit', function (e) {
   e.preventDefault();
@@ -88,16 +95,19 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
   }
 
   function enter(c) {
-    var u = Math.max(innerWidth, 1280) / 1920;
     var r = c.cw.getBoundingClientRect();
-    var s = 1, ty = 0;
+    var s = 1, ty = 0, tx = 0;
     if (!reduced.matches) {
       s = Math.min(1.35, 0.9 * innerHeight / r.height);
-      var half = r.height * s / 2, cy = r.top + r.height / 2;
-      var top = 80 * u + 12, bottom = innerHeight - 12;
-      if (cy - half < top) ty = top - (cy - half);
-      else if (cy + half > bottom) ty = bottom - (cy + half);
+      var halfH = r.height * s / 2, cy = r.top + r.height / 2;
+      var top = document.querySelector('.header').offsetHeight + 12, bottom = innerHeight - 12;
+      if (cy - halfH < top) ty = top - (cy - halfH);
+      else if (cy + halfH > bottom) ty = bottom - (cy + halfH);
+      var halfW = r.width * s / 2, cx = r.left + r.width / 2, edge = 8;
+      if (cx - halfW < edge) tx = edge - (cx - halfW);
+      else if (cx + halfW > innerWidth - edge) tx = innerWidth - edge - (cx + halfW);
     }
+    c.cw.style.setProperty('--tx', tx + 'px');
     c.cw.style.setProperty('--s', s);
     c.cw.style.setProperty('--ty', ty + 'px');
     clearTimeout(c.stopTimer);
@@ -183,6 +193,7 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
   if (!path || !dot || !window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
 
+  if (isMobile) dot.setAttribute('r', 24); // кривая сжата в ~0.2 раза, точка остаётся заметной
   var L = path.getTotalLength();
   // Привязки шагов (координаты в системе SVG), по порядку обхода кривой 01 → 02 → 03 → 04
   var anchors = [[517.178, 19.3501], [589.178, 545.35], [1225.18, 76.3501], [1477.18, 796.35]];
@@ -240,7 +251,7 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // листочки остаются статичными
   gsap.registerPlugin(ScrollTrigger);
 
-  var uPx = function () { return Math.max(innerWidth, 1280) / 1920; };
+  var uPx = unitPx;
   var num = function (el, name) { return parseFloat(el.style.getPropertyValue(name)); };
   var RAD = Math.PI / 180;
 
@@ -251,6 +262,7 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
     return {
       fi: fi, sh: sh, tx: tx, hit: fi.querySelector('.hit'),
       pair: [sh, tx], th: th, w: w, h: h, y0: num(fi, '--y'), sv: sv, z: +fi.style.getPropertyValue('--z'),
+      ss: isMobile ? (300 * innerWidth / 390) / w : 1, // масштаб теней на мобильном
       k: { v: 0 }, // глубина тени: 0 — базовая, 1 — максимальная
       breath: null
     };
@@ -270,16 +282,16 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
 
   function shadow(p) {
     var k = p.k.v, s = p.sv;
-    p.sh.style.filter = 'drop-shadow(' + (s[0] * (1 + 0.9 * k)).toFixed(2) + 'px ' + (s[1] * (1 + 1.1 * k)).toFixed(2) + 'px ' +
-      (s[2] * (1 + 2.2 * k)).toFixed(2) + 'px rgba(0,0,0,' + (0.25 + 0.12 * k).toFixed(3) + '))';
+    p.sh.style.filter = 'drop-shadow(' + (p.ss * s[0] * (1 + 0.9 * k)).toFixed(2) + 'px ' + (p.ss * s[1] * (1 + 1.1 * k)).toFixed(2) + 'px ' +
+      (p.ss * s[2] * (1 + 2.2 * k)).toFixed(2) + 'px rgba(0,0,0,' + (0.25 + 0.12 * k).toFixed(3) + '))';
   }
 
   papers.forEach(function (p) {
     gsap.set(p.pair, base(p));
     // старт: листок над секцией (секция обрезает, поэтому его не видно)
-    p.startY = -(p.y0 + p.h + 120) * uPx();
+    p.startY = isMobile ? -240 * innerWidth / 390 : -(p.y0 + p.h + 120) * uPx();
     p.kick = (p.th >= 0 ? 1 : -1) * 16;
-    gsap.set(p.pair, { y: p.startY, rotation: p.th + p.kick });
+    gsap.set(p.pair, { y: p.startY, rotation: p.th + p.kick, opacity: isMobile ? 0 : 1 });
     p.k.v = 1; shadow(p);
   });
 
@@ -290,20 +302,31 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
     p.breath.progress((i * 0.37) % 1);
   }
 
+  function land(p, i, delay) {
+    var u = uPx(), s = (p.th >= 0 ? 1 : -1);
+    var tl = gsap.timeline({ delay: delay, onComplete: function () { p.dropped = true; breathe(p, i); } });
+    if (isMobile) tl.to(p.pair, { opacity: 1, duration: 0.25, ease: 'none' }, 0);
+    tl.to(p.pair, { y: 16 * u, rotation: p.th - s * 2.5, duration: 0.62, ease: 'power2.in' }, 0)    // падение с «перелётом»
+      .to(p.k, { v: 0, duration: 0.62, ease: 'power2.in', onUpdate: function () { shadow(p); } }, 0)
+      .to(p.pair, { y: 0, rotation: p.th, duration: 0.5, ease: 'back.out(2.2)' });                  // отскок и успокоение
+  }
+
   function drop() {
     // порядок слоёв снизу вверх: 3 → 5 → 4 → 1 → 2, каждый следующий падает на предыдущий
-    var order = [3, 5, 4, 1, 2];
-    order.forEach(function (n, i) {
+    [3, 5, 4, 1, 2].forEach(function (n, i) {
       var p = papers.filter(function (q) { return q.z === ({ 3: 1, 5: 2, 4: 3, 1: 4, 2: 5 })[n]; })[0];
-      var u = uPx(), s = (p.th >= 0 ? 1 : -1);
-      var tl = gsap.timeline({ delay: 0.12 + i * 0.16, onComplete: function () { p.dropped = true; breathe(p, i); } });
-      tl.to(p.pair, { y: 16 * u, rotation: p.th - s * 2.5, duration: 0.62, ease: 'power2.in' })     // падение с «перелётом»
-        .to(p.k, { v: 0, duration: 0.62, ease: 'power2.in', onUpdate: function () { shadow(p); } }, 0)
-        .to(p.pair, { y: 0, rotation: p.th, duration: 0.5, ease: 'back.out(2.2)' });                 // отскок и успокоение
+      land(p, i, 0.12 + i * 0.16);
     });
   }
 
-  ScrollTrigger.create({ trigger: section, start: 'top 30%', once: true, onEnter: drop });
+  if (isMobile) {
+    // на мобильном листочки стоят стопкой: каждый падает, когда доскроллили до него
+    papers.forEach(function (p, i) {
+      ScrollTrigger.create({ trigger: p.fi, start: 'top 88%', once: true, onEnter: function () { land(p, i, 0); } });
+    });
+  } else {
+    ScrollTrigger.create({ trigger: section, start: 'top 30%', once: true, onEnter: drop });
+  }
 
   // Hover: подъём, глубже тень, затухающая дрожь вокруг базового поворота
   papers.forEach(function (p) {
