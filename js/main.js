@@ -193,7 +193,15 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
   if (!path || !dot || !window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
 
-  if (isMobile) dot.setAttribute('r', 24); // кривая сжата в ~0.2 раза, точка остаётся заметной
+  if (isMobile) {
+    // На телефоне кривая растянута неравномерно (621.5×518 вместо 1924.6×851.2): рисуем точку эллипсом,
+    // чтобы на экране она оставалась круглой (радиус ≈ 8 px макета).
+    var sx = 621.5 / 1924.57, sy = 518.15 / 851.221, R = 8;
+    var ell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    ell.setAttribute('class', 'dot'); ell.setAttribute('cx', 0); ell.setAttribute('cy', 0);
+    ell.setAttribute('rx', R / sx); ell.setAttribute('ry', R / sy); ell.setAttribute('fill', 'black');
+    dot.parentNode.replaceChild(ell, dot); dot = ell;
+  }
   var L = path.getTotalLength();
   // Привязки шагов (координаты в системе SVG), по порядку обхода кривой 01 → 02 → 03 → 04
   var anchors = [[517.178, 19.3501], [589.178, 545.35], [1225.18, 76.3501], [1477.18, 796.35]];
@@ -353,4 +361,16 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
       gsap.to(p.k, { v: 0, duration: 0.5, ease: 'power2.out', onUpdate: function () { shadow(p); } });
     });
   });
+})();
+
+// ---------- Мобильное меню (бургер) ----------
+(function () {
+  var header = document.querySelector('.header');
+  var btn = header && header.querySelector('.burger');
+  if (!btn) return;
+  function set(open) { header.classList.toggle('open', open); btn.setAttribute('aria-expanded', open); }
+  btn.addEventListener('click', function (e) { e.stopPropagation(); set(!header.classList.contains('open')); });
+  header.querySelectorAll('.mmenu a').forEach(function (a) { a.addEventListener('click', function () { set(false); }); });
+  document.addEventListener('click', function (e) { if (!header.contains(e.target)) set(false); });
+  addEventListener('scroll', function () { if (header.classList.contains('open')) set(false); }, { passive: true });
 })();
