@@ -60,7 +60,7 @@ button.btn{border:0;font-family:"Elagern",serif;color:#000}
 .cw.on .cs{transform:translate(var(--tx,0px),var(--ty,0px)) scale(var(--s,1.35))}
 .card{position:absolute;inset:0;border-radius:calc(30*var(--u));border:1px solid #545454;background:var(--grey);overflow:hidden}
 .card video{width:100%;height:100%;object-fit:cover;display:block}
-.glow{position:absolute;left:calc(-28*var(--u));top:calc(-28*var(--u));width:calc(100% + 56*var(--u));height:calc(100% + 56*var(--u));filter:blur(calc(28*var(--u)));opacity:0;transition:opacity .45s ease;pointer-events:none}
+.glow{position:absolute;left:calc(-28*var(--u));top:calc(-28*var(--u));width:calc(100% + 56*var(--u));height:calc(100% + 56*var(--u));border-radius:calc(64*var(--u));filter:blur(calc(32*var(--u)));opacity:0;transition:opacity .45s ease;pointer-events:none}
 .cw.on .glow{opacity:.6}
 .cap{width:calc(323*var(--u));line-height:1.25}
 .cn{display:block;font-family:"Elagern",serif;font-weight:400;font-size:calc(32*var(--u))}
@@ -91,6 +91,8 @@ button.btn{border:0;font-family:"Elagern",serif;color:#000}
 
 /* how it works */
 .curve{display:block;width:calc(1924.57*var(--u));height:calc(851.221*var(--u));overflow:visible}
+.curve.mob{display:none}
+.how-strip{--p:1480;--dur:46s}
 .step h3{font-family:"Elagern",serif;font-size:calc(64*var(--u));line-height:1.2;white-space:nowrap}
 .stext{font-size:calc(24*var(--u));line-height:calc(31*var(--u));white-space:nowrap}
 
@@ -237,17 +239,18 @@ section,footer{overflow:clip}
 .how{height:calc(1011*var(--u))}
 .how .title{top:calc(40*var(--u))}
 .curvebox{left:calc(2*var(--u));top:calc(251.25*var(--u));width:calc(621.5*var(--u));height:calc(518.15*var(--u))}
-.curve{width:100%;height:100%}
-.curve .cp{stroke-width:2.5}
+.curve.desk{display:none}
+.curve.mob{display:block;width:100%;height:100%}
 .step h3{font-size:calc(40*var(--u));line-height:normal;font-feature-settings:"liga" 0;font-variant-ligatures:none}
 .stext{font-size:calc(16*var(--u));line-height:calc(20*var(--u))}
 .step[data-s="1"]{left:calc(20*var(--u));top:calc(152*var(--u))}.stext[data-s="1"]{left:calc(20*var(--u));top:calc(204*var(--u))}
 .step[data-s="2"]{left:calc(20*var(--u));top:calc(611*var(--u))}.stext[data-s="2"]{left:calc(20*var(--u));top:calc(663*var(--u))}
 .step[data-s="3"]{left:calc(290*var(--u));top:calc(351*var(--u))}.stext[data-s="3"]{left:calc(290*var(--u));top:calc(403*var(--u))}
 .step[data-s="4"]{left:calc(280*var(--u));top:calc(787*var(--u))}.stext[data-s="4"]{left:calc(280*var(--u));top:calc(839*var(--u))}
-.how-strip{left:0;top:calc(919*var(--u));font-size:calc(18*var(--u));--p:700;--dur:34s}
+.how-strip{left:0;top:calc(919*var(--u));font-size:calc(18*var(--u));--p:660;--dur:25s}
 .how-strip span:nth-child(1){left:calc(6*var(--u))!important}
-.how-strip span:nth-child(2){left:calc(706*var(--u))!important}
+.how-strip span:nth-child(2){left:calc(666*var(--u))!important}
+.how-strip span:nth-child(3){left:calc(1326*var(--u))!important}
 
 /* 6–8. FAQ, Contact, Footer: в макете телефона пока нет, раскладка в потоке */
 .faq,.contact{position:relative;height:auto}
@@ -259,9 +262,9 @@ section,footer{overflow:clip}
 .fi h3{font-size:calc(var(--fs) * var(--k));margin-bottom:calc(var(--fs) * .7 * var(--k))}
 .fi p{font-size:calc(var(--ps) * var(--k))}
 .contact .title{padding-bottom:calc(14*var(--m))}
-.contact .rings{position:static;display:block;width:100%;height:auto}
 .contact .a,.footer .a{position:static}
 .contact .s,.footer .s{width:auto;height:auto}
+.contact>.rings{position:static;display:block;width:100%;height:auto;margin-top:calc(34*var(--m))}
 .paper-c{display:none}
 .form{position:relative;display:flex;flex-direction:column;margin:0 calc(12*var(--m)) calc(40*var(--m));padding:calc(40*var(--m)) calc(30*var(--m)) calc(46*var(--m))}
 .form::before{content:"";position:absolute;inset:0;background:url("../assets/decor/paper-contact.webp") center/100% 100% no-repeat;filter:drop-shadow(0 calc(5*var(--m)) calc(3*var(--m)) rgba(0,0,0,.25));z-index:0}

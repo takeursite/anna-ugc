@@ -188,23 +188,17 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
 // ---------- How It Works: точка едет по кривой вместе со скроллом ----------
 (function () {
   var section = document.querySelector('.how');
-  var path = section && section.querySelector('.cp');
-  var dot = section && section.querySelector('.dot');
+  var curve = section && section.querySelector(isMobile ? '.curve.mob' : '.curve.desk');
+  var path = curve && curve.querySelector('.cp');
+  var dot = curve && curve.querySelector('.dot');
   if (!path || !dot || !window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
 
-  if (isMobile) {
-    // На телефоне кривая растянута неравномерно (621.5×518 вместо 1924.6×851.2): рисуем точку эллипсом,
-    // чтобы на экране она оставалась круглой (радиус ≈ 8 px макета).
-    var sx = 621.5 / 1924.57, sy = 518.15 / 851.221, R = 8;
-    var ell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    ell.setAttribute('class', 'dot'); ell.setAttribute('cx', 0); ell.setAttribute('cy', 0);
-    ell.setAttribute('rx', R / sx); ell.setAttribute('ry', R / sy); ell.setAttribute('fill', 'black');
-    dot.parentNode.replaceChild(ell, dot); dot = ell;
-  }
   var L = path.getTotalLength();
   // Привязки шагов (координаты в системе SVG), по порядку обхода кривой 01 → 02 → 03 → 04
-  var anchors = [[517.178, 19.3501], [589.178, 545.35], [1225.18, 76.3501], [1477.18, 796.35]];
+  var anchors = isMobile
+    ? [[250.7, 9.7], [86.8, 358.4], [375.2, 200.1], [397.6, 517.2]]          // кривая телефона (621.7×519.2)
+    : [[517.178, 19.3501], [589.178, 545.35], [1225.18, 76.3501], [1477.18, 796.35]];
   // Длина пути до ближайшей к привязке точки кривой
   var stepAt = anchors.map(function (a) {
     var best = 0, bd = Infinity;
@@ -297,7 +291,7 @@ document.getElementById('inquiry').addEventListener('submit', function (e) {
   papers.forEach(function (p) {
     gsap.set(p.pair, base(p));
     // старт: листок над секцией (секция обрезает, поэтому его не видно)
-    p.startY = isMobile ? -240 * innerWidth / 390 : -(p.y0 + p.h + 120) * uPx();
+    p.startY = isMobile ? -120 * innerWidth / 390 : -(p.y0 + p.h + 120) * uPx();
     p.kick = (p.th >= 0 ? 1 : -1) * 16;
     gsap.set(p.pair, { y: p.startY, rotation: p.th + p.kick, opacity: isMobile ? 0 : 1 });
     p.k.v = 1; shadow(p);
